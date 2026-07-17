@@ -1,0 +1,20 @@
+name: student-affairs-assistant
+
+services:
+  api:
+    build: ./api
+    volumes:
+      - ./api/chroma_db:/app/chroma_db
+    env_file:
+      - .env
+    expose:
+      - "8000"
+
+  ui:
+    build: ./ui
+    environment:
+      - API_URL=http://api:8000
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api
