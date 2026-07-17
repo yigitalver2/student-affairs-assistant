@@ -41,14 +41,9 @@ def parse_guidebook(path: Path) -> list[dict]:
         body_end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
         body = text[body_start:body_end]
 
-        page_match = PAGE_RE.match(body.strip())
-        if page_match:
-            page = page_match.group(1).strip()
-            body = body[page_match.end():] if body.strip().startswith(page_match.group(0).strip()) else body
-        else:
-            page = None
+        page_match = PAGE_RE.match(body.lstrip("\n"))
+        page = page_match.group(1).strip() if page_match else None
 
-        # page satırını body'den güvenli şekilde çıkar
         body_wo_page = PAGE_RE.sub("", body, count=1).strip()
 
         chunks.append({
@@ -58,6 +53,7 @@ def parse_guidebook(path: Path) -> list[dict]:
         })
 
     return chunks
+
 
 
 def load_links(path: Path) -> dict:
