@@ -24,15 +24,31 @@ GENERATION_MODEL = os.environ.get(
 TOP_K = int(os.environ.get("TOP_K", "4"))
 
 UNKNOWN_MARKER = "bu bilgi elimde yok"
+SOURCE_MARKER = "[KAYNAK_VAR]"
+
+SMALL_TALK_KEYWORDS = [
+    "selam", "merhaba", "naber", "günaydın", "iyi günler", "iyi akşamlar",
+    "teşekkür", "sağol", "sağ ol", "görüşürüz", "hoşça kal", "hi", "hello", "hey",
+]
+
+
+def is_small_talk(question: str) -> bool:
+    q = question.strip().lower()
+    return len(q.split()) <= 4 and any(kw in q for kw in SMALL_TALK_KEYWORDS)
+
+
 
 SYSTEM_PROMPT = """Sen Bahçeşehir Üniversitesi öğrenci işleri çalışanları için bir iç bilgi asistanısın.
 Sana verilen BAĞLAM dışında hiçbir bilgi kullanma, tahmin yürütme veya uydurma yapma.
 
 Kurallar:
-- Sadece aşağıdaki BAĞLAM içindeki bilgiye dayanarak cevap ver.
-- BAĞLAM'da soruyu yanıtlayacak bilgi yoksa, başka hiçbir şey eklemeden sadece şunu yaz: "Bu bilgi elimde yok."
+- Kullanıcı selamlama, teşekkür veya kendini tanıtma isteği gibi genel bir sohbet ifadesi kullanıyorsa, BAĞLAM'a bakmadan kısa ve nazik bir karşılık ver.
+- Kullanıcı üniversite prosedürü/bilgisiyle ilgili gerçek bir soru soruyorsa, sadece aşağıdaki BAĞLAM içindeki bilgiye dayanarak cevap ver. BAĞLAM'da bilgi yoksa, başka hiçbir şey eklemeden sadece şunu yaz: "Bu bilgi elimde yok."
 - Cevabını kısa ve net ver. Kaynak, sayfa numarası veya link ekleme — bunlar ayrıca sistem tarafından gösterilecek.
+- Cevabın BAĞLAM'daki spesifik bir bilgiye (bir kural, sayı, prosedür, isim vb.) gerçekten dayanıyorsa, cevabının en sonuna yeni bir satırda tam olarak şunu ekle: [KAYNAK_VAR]
+  Cevabın bir sohbet karşılığıysa, kendini tanıtmaysa veya "Bu bilgi elimde yok" ise, bu etiketi kesinlikle ekleme.
 """
+
 
 app = FastAPI()
 chroma_client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
@@ -110,12 +126,19 @@ def query(request: QueryRequest):
     if collection.count() == 0:
         raise HTTPException(status_code=503, detail="Chroma boş — önce ingest.py çalıştırılmalı.")
 
+    if is_small_talk(request.question):
+        answer = generate_answer(request.question, context="")
+        return QueryResponse(answer=answer, sources=[])
+
     documents, metadatas = retrieve(request.question)
     context = build_context(documents, metadatas)
-    answer = generate_answer(request.question, context)
+    raw_answer = generate_answer(request.question, context)
 
+    has_source_marker = SOURCE_MARKER in raw_answer
+    answer = raw_answer.replace(SOURCE_MARKER, "").strip()
     is_unknown = UNKNOWN_MARKER in answer.lower()
-    sources = [] if is_unknown else [
+
+    sources = [] if (is_unknown or not has_source_marker) else [
         Source(
             section_title=meta["section_title"],
             page=meta["page"],
@@ -126,3 +149,4 @@ def query(request: QueryRequest):
     ]
 
     return QueryResponse(answer=answer, sources=sources)
+
