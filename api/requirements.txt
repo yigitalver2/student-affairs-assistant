@@ -1,3 +1,6 @@
 chromadb
 openai
+antrophic
+fastapi
+uvicorn
 python-dotenv
