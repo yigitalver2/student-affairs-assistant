@@ -16,11 +16,7 @@ CHROMA_DB_PATH = os.environ.get("CHROMA_DB_PATH", "chroma_db")
 COLLECTION_NAME = "guidebook"
 EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "text-embedding-3-small")
 
-GENERATION_PROVIDER = os.environ.get("GENERATION_PROVIDER", "openai")  # "openai" | "anthropic"
-GENERATION_MODEL = os.environ.get(
-    "GENERATION_MODEL",
-    "gpt-4o-mini" if GENERATION_PROVIDER == "openai" else "claude-haiku-4-5",
-)
+GENERATION_MODEL = os.environ.get("GENERATION_MODEL", "gpt-4o-mini")
 TOP_K = int(os.environ.get("TOP_K", "8"))
 
 UNKNOWN_MARKERS = ("bu bilgi elimde yok", "don't have this information")
@@ -97,29 +93,14 @@ def build_context(documents: list[str], metadatas: list[dict]) -> str:
 def generate_answer(question: str, context: str) -> str:
     user_message = f"BAĞLAM:\n{context}\n\nSORU: {question}"
 
-    if GENERATION_PROVIDER == "openai":
-        response = openai_client.chat.completions.create(
-            model=GENERATION_MODEL,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_message},
-            ],
-        )
-        return response.choices[0].message.content.strip()
-
-    if GENERATION_PROVIDER == "anthropic":
-        from anthropic import Anthropic
-
-        anthropic_client = Anthropic()
-        response = anthropic_client.messages.create(
-            model=GENERATION_MODEL,
-            max_tokens=1024,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": user_message}],
-        )
-        return response.content[0].text.strip()
-
-    raise ValueError(f"Bilinmeyen GENERATION_PROVIDER: {GENERATION_PROVIDER}")
+    response = openai_client.chat.completions.create(
+        model=GENERATION_MODEL,
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": user_message},
+        ],
+    )
+    return response.choices[0].message.content.strip()
 
 
 @app.post("/query", response_model=QueryResponse)

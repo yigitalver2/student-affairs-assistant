@@ -1,6 +1,5 @@
 chromadb
 openai
-anthropic
 fastapi
 uvicorn
 python-dotenv
