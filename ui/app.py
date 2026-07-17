@@ -213,8 +213,8 @@ st.markdown(
 
     <div class="glass-header">
         <img src="{LOGO_URL}" alt="BAU logo" />
-        <h1>BAU Öğrenci İşleri Asistanı</h1>
-        <p>Personel kullanımı içindir · Cevaplar kurum içi doküman kaynaklıdır</p>
+        <h1>BAU Student Affairs Assistant</h1>
+        <p>For staff use only · Answers are sourced from internal documents</p>
     </div>
     """,
     unsafe_allow_html=True,
@@ -223,7 +223,7 @@ st.markdown(
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-if st.button("✨ Yeni Sohbet"):
+if st.button("✨ New Chat"):
     st.session_state.messages = []
     st.rerun()
 
@@ -248,7 +248,7 @@ for message in st.session_state.messages:
                 unsafe_allow_html=True,
             )
 
-question = st.chat_input("Bir soru sor...")
+question = st.chat_input("Ask a question...")
 
 if question:
     st.session_state.messages.append({"role": "user", "content": question})
