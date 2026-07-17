@@ -65,6 +65,7 @@ st.markdown(
     }}
 
     .glass-header {{
+        position: relative;
         background: rgba(255, 255, 255, 0.12);
         backdrop-filter: blur(24px);
         -webkit-backdrop-filter: blur(24px);
@@ -99,8 +100,20 @@ st.markdown(
         max-width: 78%;
         width: fit-content;
     }}
-    [data-testid="stChatMessage"] p, [data-testid="stChatMessage"] span {{
+    [data-testid="stChatMessage"] p,
+    [data-testid="stChatMessage"] span,
+    [data-testid="stChatMessage"] li,
+    [data-testid="stChatMessage"] strong,
+    [data-testid="stChatMessage"] em,
+    [data-testid="stChatMessage"] h1,
+    [data-testid="stChatMessage"] h2,
+    [data-testid="stChatMessage"] h3,
+    [data-testid="stChatMessage"] td,
+    [data-testid="stChatMessage"] th {{
         color: #fff !important;
+    }}
+    [data-testid="stChatMessage"] ul, [data-testid="stChatMessage"] ol {{
+        color: #fff;
     }}
     [data-testid="stChatMessage"] a, .source-box a {{
         color: #FF9466 !important;
@@ -125,7 +138,8 @@ st.markdown(
         margin-left: 0;
     }}
 
-    /* Alt sabit çubuk (chat input alanı) — Streamlit'in varsayılan beyaz zeminini kaldırıp cam temayla uyumlu hale getir */
+    /* Alt sabit çubuk (chat input alanı) — Streamlit'in varsayılan beyaz zeminini kaldırıp cam temayla uyumlu hale getir.
+       pointer-events: none → katman, üstünü kapladığı sabit butonların tıklamasını yutmasın; input'un kendisi aşağıda tekrar aktifleştiriliyor. */
     [data-testid="stBottom"],
     [data-testid="stBottom"] > div,
     [data-testid="stBottomBlockContainer"],
@@ -134,8 +148,10 @@ st.markdown(
         background-color: transparent !important;
     }}
     [data-testid="stBottom"] {{
-        backdrop-filter: blur(18px);
-        -webkit-backdrop-filter: blur(18px);
+        pointer-events: none;
+    }}
+    [data-testid="stBottom"] [data-testid="stChatInput"] {{
+        pointer-events: auto;
     }}
 
     [data-testid="stChatInput"] {{
@@ -152,6 +168,33 @@ st.markdown(
     }}
     [data-testid="stChatInput"] textarea::placeholder {{
         color: rgba(1, 38, 90, 0.55) !important;
+    }}
+
+    /* Yeni Sohbet — header kartının sağ üst köşesine oturan cam pill.
+       block-container position:relative olduğu için absolute konum header ile birlikte akar. */
+    .stButton {{
+        position: absolute;
+        top: 2.85rem;
+        right: 1.25rem;
+        z-index: 5;
+        width: auto !important;
+    }}
+    .stButton button {{
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        border-radius: 999px !important;
+        color: #fff !important;
+        font-size: 0.72rem !important;
+        font-weight: 500 !important;
+        padding: 0.28rem 0.9rem !important;
+        min-height: 0 !important;
+        line-height: 1.4 !important;
+        white-space: nowrap;
+    }}
+    .stButton button:hover {{
+        background: rgba(255, 255, 255, 0.26) !important;
+        border-color: rgba(255, 255, 255, 0.55) !important;
+        color: #fff !important;
     }}
 
     .source-box {{
@@ -179,6 +222,10 @@ st.markdown(
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
+
+if st.button("✨ Yeni Sohbet"):
+    st.session_state.messages = []
+    st.rerun()
 
 
 def format_sources(sources: list[dict]) -> str:

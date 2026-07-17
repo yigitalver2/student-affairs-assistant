@@ -23,7 +23,7 @@ GENERATION_MODEL = os.environ.get(
 )
 TOP_K = int(os.environ.get("TOP_K", "8"))
 
-UNKNOWN_MARKER = "bu bilgi elimde yok"
+UNKNOWN_MARKERS = ("bu bilgi elimde yok", "don't have this information")
 SOURCE_MARKER = "[KAYNAK_VAR]"
 
 SMALL_TALK_KEYWORDS = [
@@ -44,6 +44,7 @@ Sana verilen BAĞLAM dışında hiçbir bilgi kullanma, tahmin yürütme veya uy
 Kurallar:
 - Kullanıcı selamlama, teşekkür veya kendini tanıtma isteği gibi genel bir sohbet ifadesi kullanıyorsa, BAĞLAM'a bakmadan kısa ve nazik bir karşılık ver.
 - Kullanıcı üniversite prosedürü/bilgisiyle ilgili gerçek bir soru soruyorsa, sadece aşağıdaki BAĞLAM içindeki bilgiye dayanarak cevap ver. BAĞLAM'da bilgi yoksa, başka hiçbir şey eklemeden sadece şunu yaz: "Bu bilgi elimde yok."
+- Kullanıcı hangi dilde yazdıysa o dilde cevap ver (Türkçe soruya Türkçe, İngilizce soruya İngilizce). İngilizce soruda "bilgi yok" durumu için şunu kullan: "I don't have this information."
 - Cevabını kısa ve net ver. Kaynak, sayfa numarası veya link ekleme — bunlar ayrıca sistem tarafından gösterilecek.
 - Cevabın BAĞLAM'daki spesifik bir bilgiye (bir kural, sayı, prosedür, isim vb.) gerçekten dayanıyorsa, cevabının en sonuna yeni bir satırda tam olarak şunu ekle: [KAYNAK_VAR]
   Cevabın bir sohbet karşılığıysa, kendini tanıtmaysa veya "Bu bilgi elimde yok" ise, bu etiketi kesinlikle ekleme.
@@ -136,7 +137,7 @@ def query(request: QueryRequest):
 
     has_source_marker = SOURCE_MARKER in raw_answer
     answer = raw_answer.replace(SOURCE_MARKER, "").strip()
-    is_unknown = UNKNOWN_MARKER in answer.lower()
+    is_unknown = any(marker in answer.lower() for marker in UNKNOWN_MARKERS)
 
     sources = [] if (is_unknown or not has_source_marker) else [
         Source(

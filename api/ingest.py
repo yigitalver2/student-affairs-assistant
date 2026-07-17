@@ -22,6 +22,7 @@ CHROMA_DB_PATH = os.environ.get("CHROMA_DB_PATH", "chroma_db")
 COLLECTION_NAME = "guidebook"
 
 EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "text-embedding-3-small")
+ENRICHMENT_MODEL = os.environ.get("ENRICHMENT_MODEL", "gpt-4o-mini")
 
 # Section başlığını yakalar: "## Scholarships"
 SECTION_RE = re.compile(r"^## (.+)$", re.MULTILINE)
@@ -75,6 +76,25 @@ def embed_texts(client: OpenAI, texts: list[str]) -> list[list[float]]:
     return [item.embedding for item in response.data]
 
 
+def enrich_turkish(client: OpenAI, title: str, body: str) -> str:
+    """Corpus İngilizce ama kullanıcı soruları çoğunlukla Türkçe; embedding
+    eşleşmesini güçlendirmek için her section'a Türkçe başlık + anahtar
+    kelimeler üretilir. Sadece embed edilen metne eklenir, kullanıcıya
+    gösterilen body_markdown değişmez."""
+    response = client.chat.completions.create(
+        model=ENRICHMENT_MODEL,
+        messages=[{
+            "role": "user",
+            "content": (
+                "Aşağıdaki üniversite el kitabı bölümü için Türkçe başlık çevirisi ve "
+                "5-10 Türkçe anahtar kelime üret. Tek satır, virgülle ayrılmış, açıklama ekleme.\n\n"
+                f"Başlık: {title}\n\nİçerik:\n{body[:1500]}"
+            ),
+        }],
+    )
+    return response.choices[0].message.content.strip()
+
+
 def slugify(title: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
 
@@ -91,7 +111,13 @@ def run():
     print(f"{len(chunks)} section bulundu, embedding başlıyor...")
 
     openai_client = OpenAI()  # OPENAI_API_KEY env'den okunur
-    texts = [f"{c['section_title']}\n{c['body_markdown']}" for c in chunks]
+
+    texts = []
+    for c in chunks:
+        turkish = enrich_turkish(openai_client, c["section_title"], c["body_markdown"])
+        texts.append(f"{c['section_title']}\n{turkish}\n{c['body_markdown']}")
+        print(f"  + {c['section_title']}: {turkish[:80]}")
+
     embeddings = embed_texts(openai_client, texts)
 
     ids = [slugify(c["section_title"]) for c in chunks]

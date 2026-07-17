@@ -5,6 +5,8 @@ services:
     build: ./api
     volumes:
       - ./api/chroma_db:/app/chroma_db
+      - ./api:/app 
+    command: sh -c "python ingest.py && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
     env_file:
       - .env
     expose:
@@ -12,6 +14,8 @@ services:
 
   ui:
     build: ./ui
+    volumes:
+      - ./ui:/app
     environment:
       - API_URL=http://api:8000
     ports:
