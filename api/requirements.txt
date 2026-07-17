@@ -1,6 +1,6 @@
 chromadb
 openai
-antrophic
+anthropic
 fastapi
 uvicorn
 python-dotenv
