@@ -21,7 +21,7 @@ GENERATION_MODEL = os.environ.get(
     "GENERATION_MODEL",
     "gpt-4o-mini" if GENERATION_PROVIDER == "openai" else "claude-haiku-4-5",
 )
-TOP_K = int(os.environ.get("TOP_K", "4"))
+TOP_K = int(os.environ.get("TOP_K", "8"))
 
 UNKNOWN_MARKER = "bu bilgi elimde yok"
 SOURCE_MARKER = "[KAYNAK_VAR]"

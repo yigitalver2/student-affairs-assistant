@@ -96,9 +96,46 @@ st.markdown(
         border-radius: 22px !important;
         box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
         margin-bottom: 0.75rem;
+        max-width: 78%;
+        width: fit-content;
     }}
     [data-testid="stChatMessage"] p, [data-testid="stChatMessage"] span {{
         color: #fff !important;
+    }}
+    [data-testid="stChatMessage"] a, .source-box a {{
+        color: #FF9466 !important;
+        text-decoration: underline;
+        text-decoration-color: rgba(255, 148, 102, 0.6);
+    }}
+    [data-testid="stChatMessage"] a:hover, .source-box a:hover {{
+        color: #FFB396 !important;
+    }}
+
+    /* Kullanıcı mesajları sağda, camgöbeği tonlu */
+    [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {{
+        margin-left: auto;
+        margin-right: 0;
+        flex-direction: row-reverse;
+        background: rgba(0, 173, 239, 0.22) !important;
+    }}
+
+    /* Asistan mesajları solda */
+    [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarAssistant"]) {{
+        margin-right: auto;
+        margin-left: 0;
+    }}
+
+    /* Alt sabit çubuk (chat input alanı) — Streamlit'in varsayılan beyaz zeminini kaldırıp cam temayla uyumlu hale getir */
+    [data-testid="stBottom"],
+    [data-testid="stBottom"] > div,
+    [data-testid="stBottomBlockContainer"],
+    .stChatFloatingInputContainer {{
+        background: transparent !important;
+        background-color: transparent !important;
+    }}
+    [data-testid="stBottom"] {{
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
     }}
 
     [data-testid="stChatInput"] {{
@@ -109,7 +146,12 @@ st.markdown(
         border-radius: 999px !important;
     }}
     [data-testid="stChatInput"] textarea {{
-        color: #fff !important;
+        color: {NAVY} !important;
+        background: transparent !important;
+        caret-color: {NAVY};
+    }}
+    [data-testid="stChatInput"] textarea::placeholder {{
+        color: rgba(1, 38, 90, 0.55) !important;
     }}
 
     .source-box {{
